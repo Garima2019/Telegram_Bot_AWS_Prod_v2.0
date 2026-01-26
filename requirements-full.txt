@@ -1,0 +1,71 @@
+# ============================================================
+# AWS Telegram Bot - Complete Requirements
+# ============================================================
+# This file contains all dependencies for:
+# - Lambda deployment (production)
+# - Local development
+# - Testing
+# ============================================================
+
+# ============================================================
+# PRODUCTION DEPENDENCIES (Lambda Deployment)
+# ============================================================
+
+# AWS SDK for Python
+boto3==1.34.162
+botocore==1.34.162
+
+# Note: Python 3.12 standard library modules used (no install needed):
+# - json, os, urllib, datetime, hashlib, traceback, logging, time
+
+# ============================================================
+# DEVELOPMENT DEPENDENCIES (Local Testing Only)
+# ============================================================
+
+# Environment variable management
+python-dotenv==1.0.0
+
+# ============================================================
+# TESTING DEPENDENCIES (Optional - for unit tests)
+# ============================================================
+
+# pytest==7.4.3
+# pytest-cov==4.1.0
+# pytest-mock==3.12.0
+# moto==4.2.9          # Mock AWS services for testing
+# responses==0.24.1     # Mock HTTP requests
+
+# ============================================================
+# DEVELOPMENT TOOLS (Optional)
+# ============================================================
+
+# black==23.12.1       # Code formatter
+# pylint==3.0.3        # Linter
+# mypy==1.7.1          # Type checker
+# isort==5.13.2        # Import sorter
+
+# ============================================================
+# DOCUMENTATION (Optional)
+# ============================================================
+
+# sphinx==7.2.6        # Documentation generator
+# sphinx-rtd-theme==2.0.0
+
+# ============================================================
+# NOTES
+# ============================================================
+# 1. For Lambda deployment, only install production dependencies:
+#    pip install boto3 botocore
+#
+# 2. For local development:
+#    pip install -r requirements.txt
+#
+# 3. For testing:
+#    pip install -r requirements.txt
+#    pip install pytest pytest-cov pytest-mock moto responses
+#
+# 4. Lambda comes with boto3 pre-installed, but it's recommended
+#    to package your own version for consistency
+#
+# 5. python-dotenv is only needed for local testing (not in Lambda)
+# ============================================================
