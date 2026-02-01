@@ -1504,6 +1504,348 @@ def run_crud_demo(chat_id: int):
         "executed successfully and data persisted correctly."
     )
 
+
+
+
+# ========= NEW: STICKER FUNCTIONS =========
+
+def send_sticker(chat_id: int, sticker: str, reply_to_message_id: int = None):
+    """
+    Send a sticker to a chat.
+    
+    Args:
+        chat_id: Unique identifier for the target chat
+        sticker: Sticker file_id or URL
+        reply_to_message_id: Optional message ID to reply to
+    """
+    payload = {
+        "chat_id": chat_id,
+        "sticker": sticker
+    }
+    if reply_to_message_id:
+        payload["reply_to_message_id"] = reply_to_message_id
+    
+    logger.info("Sending sticker", chat_id=chat_id, action="send_sticker")
+    return telegram_request("sendSticker", payload)
+
+def handle_sticker(chat_id: int, message: dict):
+    """
+    Handle incoming sticker messages.
+    Saves sticker metadata to DynamoDB and can send a reaction.
+    """
+    sticker = message.get("sticker", {})
+    file_id = sticker.get("file_id")
+    emoji = sticker.get("emoji", "")
+    set_name = sticker.get("set_name", "")
+    is_animated = sticker.get("is_animated", False)
+    is_video = sticker.get("is_video", False)
+    message_id = message.get("message_id")
+    
+    logger.info("Sticker received", 
+                chat_id=chat_id, 
+                file_id=file_id, 
+                emoji=emoji,
+                set_name=set_name,
+                is_animated=is_animated,
+                is_video=is_video,
+                action="handle_sticker")
+    
+    # Save sticker metadata to DynamoDB
+    try:
+        save_message_record(
+            chat_id=chat_id,
+            message_id=message_id,
+            text=f"Sticker: {emoji} from {set_name}",
+            message_type="sticker",
+            file_id=file_id,
+            metadata={
+                "emoji": emoji,
+                "set_name": set_name,
+                "is_animated": is_animated,
+                "is_video": is_video
+            }
+        )
+        logger.info("Sticker metadata saved to DynamoDB", chat_id=chat_id, outcome="success")
+    except Exception as e:
+        logger.error("Failed to save sticker metadata", error=e, chat_id=chat_id, outcome="failure")
+    
+    # Send a fun response
+    response_emoji = "👍" if emoji else "✨"
+    send_message(chat_id, f"{response_emoji} Nice sticker! {emoji}")
+
+# ========= NEW: POLL FUNCTIONS =========
+
+def send_poll(
+    chat_id: int, 
+    question: str, 
+    options: list, 
+    is_anonymous: bool = True,
+    allows_multiple_answers: bool = False,
+    correct_option_id: int = None,
+    explanation: str = None
+):
+    """
+    Send a poll to a chat.
+    
+    Args:
+        chat_id: Unique identifier for the target chat
+        question: Poll question (1-300 characters)
+        options: List of answer options (2-10 options, each 1-100 characters)
+        is_anonymous: True if poll is anonymous
+        allows_multiple_answers: True if multiple answers are allowed
+        correct_option_id: 0-based identifier of the correct option (for quiz mode)
+        explanation: Text shown when user chooses an option (quiz mode)
+    """
+    if len(options) < 2 or len(options) > 10:
+        logger.error("Poll must have 2-10 options", option_count=len(options))
+        return None
+    
+    payload = {
+        "chat_id": chat_id,
+        "question": question,
+        "options": options,
+        "is_anonymous": is_anonymous,
+        "allows_multiple_answers": allows_multiple_answers
+    }
+    
+    # Quiz mode
+    if correct_option_id is not None:
+        payload["type"] = "quiz"
+        payload["correct_option_id"] = correct_option_id
+        if explanation:
+            payload["explanation"] = explanation
+    else:
+        payload["type"] = "regular"
+    
+    logger.info("Sending poll", chat_id=chat_id, question=question, action="send_poll")
+    return telegram_request("sendPoll", payload)
+
+def handle_poll(chat_id: int, message: dict):
+    """
+    Handle incoming poll messages.
+    Saves poll data to DynamoDB.
+    """
+    poll = message.get("poll", {})
+    poll_id = poll.get("id")
+    question = poll.get("question", "")
+    options = poll.get("options", [])
+    message_id = message.get("message_id")
+    
+    logger.info("Poll received", 
+                chat_id=chat_id, 
+                poll_id=poll_id,
+                question=question,
+                action="handle_poll")
+    
+    # Format options for display
+    option_text = "\n".join([f"- {opt.get('text', '')}: {opt.get('voter_count', 0)} votes" 
+                             for opt in options])
+    
+    # Save poll to DynamoDB
+    try:
+        save_message_record(
+            chat_id=chat_id,
+            message_id=message_id,
+            text=f"Poll: {question}",
+            message_type="poll",
+            metadata={
+                "poll_id": poll_id,
+                "question": question,
+                "options": options
+            }
+        )
+        logger.info("Poll saved to DynamoDB", chat_id=chat_id, outcome="success")
+    except Exception as e:
+        logger.error("Failed to save poll", error=e, chat_id=chat_id, outcome="failure")
+    
+    send_message(chat_id, f"📊 Poll received!\n\nQuestion: {question}\n\nOptions:\n{option_text}")
+
+def handle_poll_answer(poll_answer: dict):
+    """
+    Handle poll answers from users.
+    """
+    poll_id = poll_answer.get("poll_id")
+    user = poll_answer.get("user", {})
+    user_id = user.get("id")
+    option_ids = poll_answer.get("option_ids", [])
+    
+    logger.info("Poll answer received",
+                poll_id=poll_id,
+                user_id=user_id,
+                option_ids=option_ids,
+                action="handle_poll_answer")
+    
+    # You can save poll answers to DynamoDB for analytics
+    try:
+        item = {
+            "pk": f"POLL_ANSWER#{poll_id}",
+            "sk": f"USER#{user_id}#{int(time.time())}",
+            "poll_id": poll_id,
+            "user_id": user_id,
+            "option_ids": option_ids,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        table.put_item(Item=item)
+        logger.info("Poll answer saved", poll_id=poll_id, user_id=user_id, outcome="success")
+    except Exception as e:
+        logger.error("Failed to save poll answer", error=e, outcome="failure")
+
+# ========= NEW: LOCATION FUNCTIONS =========
+
+def send_location(chat_id: int, latitude: float, longitude: float, 
+                  horizontal_accuracy: float = None, 
+                  live_period: int = None):
+    """
+    Send a location to a chat.
+    
+    Args:
+        chat_id: Unique identifier for the target chat
+        latitude: Latitude of the location
+        longitude: Longitude of the location
+        horizontal_accuracy: Accuracy radius in meters (0-1500)
+        live_period: Period in seconds for live location (60-86400)
+    """
+    payload = {
+        "chat_id": chat_id,
+        "latitude": latitude,
+        "longitude": longitude
+    }
+    
+    if horizontal_accuracy is not None:
+        payload["horizontal_accuracy"] = horizontal_accuracy
+    if live_period is not None:
+        payload["live_period"] = live_period
+    
+    logger.info("Sending location", chat_id=chat_id, 
+                latitude=latitude, longitude=longitude, action="send_location")
+    return telegram_request("sendLocation", payload)
+
+def send_venue(chat_id: int, latitude: float, longitude: float, 
+               title: str, address: str, 
+               foursquare_id: str = None, foursquare_type: str = None):
+    """
+    Send information about a venue.
+    
+    Args:
+        chat_id: Unique identifier for the target chat
+        latitude: Latitude of the venue
+        longitude: Longitude of the venue
+        title: Name of the venue
+        address: Address of the venue
+        foursquare_id: Foursquare identifier of the venue
+        foursquare_type: Foursquare type of the venue
+    """
+    payload = {
+        "chat_id": chat_id,
+        "latitude": latitude,
+        "longitude": longitude,
+        "title": title,
+        "address": address
+    }
+    
+    if foursquare_id:
+        payload["foursquare_id"] = foursquare_id
+    if foursquare_type:
+        payload["foursquare_type"] = foursquare_type
+    
+    logger.info("Sending venue", chat_id=chat_id, title=title, action="send_venue")
+    return telegram_request("sendVenue", payload)
+
+def handle_location(chat_id: int, message: dict):
+    """
+    Handle incoming location messages.
+    Saves location data to DynamoDB.
+    """
+    location = message.get("location", {})
+    latitude = location.get("latitude")
+    longitude = location.get("longitude")
+    horizontal_accuracy = location.get("horizontal_accuracy")
+    live_period = location.get("live_period")
+    message_id = message.get("message_id")
+    
+    logger.info("Location received",
+                chat_id=chat_id,
+                latitude=latitude,
+                longitude=longitude,
+                action="handle_location")
+    
+    # Save location to DynamoDB
+    try:
+        save_message_record(
+            chat_id=chat_id,
+            message_id=message_id,
+            text=f"Location: {latitude}, {longitude}",
+            message_type="location",
+            metadata={
+                "latitude": latitude,
+                "longitude": longitude,
+                "horizontal_accuracy": horizontal_accuracy,
+                "live_period": live_period
+            }
+        )
+        logger.info("Location saved to DynamoDB", chat_id=chat_id, outcome="success")
+    except Exception as e:
+        logger.error("Failed to save location", error=e, chat_id=chat_id, outcome="failure")
+    
+    # Send confirmation with Google Maps link
+    maps_url = f"https://www.google.com/maps?q={latitude},{longitude}"
+    send_message(
+        chat_id, 
+        f"📍 Location received!\n\n"
+        f"Latitude: {latitude}\n"
+        f"Longitude: {longitude}\n\n"
+        f"🗺 View on map: {maps_url}"
+    )
+
+def handle_venue(chat_id: int, message: dict):
+    """
+    Handle incoming venue messages.
+    """
+    venue = message.get("venue", {})
+    location = venue.get("location", {})
+    title = venue.get("title", "")
+    address = venue.get("address", "")
+    foursquare_id = venue.get("foursquare_id")
+    message_id = message.get("message_id")
+    
+    latitude = location.get("latitude")
+    longitude = location.get("longitude")
+    
+    logger.info("Venue received",
+                chat_id=chat_id,
+                title=title,
+                address=address,
+                action="handle_venue")
+    
+    # Save venue to DynamoDB
+    try:
+        save_message_record(
+            chat_id=chat_id,
+            message_id=message_id,
+            text=f"Venue: {title}, {address}",
+            message_type="venue",
+            metadata={
+                "title": title,
+                "address": address,
+                "latitude": latitude,
+                "longitude": longitude,
+                "foursquare_id": foursquare_id
+            }
+        )
+        logger.info("Venue saved to DynamoDB", chat_id=chat_id, outcome="success")
+    except Exception as e:
+        logger.error("Failed to save venue", error=e, chat_id=chat_id, outcome="failure")
+    
+    maps_url = f"https://www.google.com/maps?q={latitude},{longitude}"
+    send_message(
+        chat_id,
+        f"🏢 Venue received!\n\n"
+        f"Name: {title}\n"
+        f"Address: {address}\n"
+        f"📍 {latitude}, {longitude}\n\n"
+        f"🗺 View on map: {maps_url}"
+    )
+
 # ========= COMMAND HELPERS =========
 
 def help_text() -> str:
@@ -1821,6 +2163,66 @@ def handle_text_message(chat_id: int, message_id: int, text: str, first_name: st
         send_message(chat_id, stats_text)
         return
 
+     # /poll - Create a poll
+    if text.startswith("/poll"):
+        logger.info("Poll creation command received", user_id=chat_id, action="create_poll")
+        
+        # Example poll
+        send_poll(
+            chat_id=chat_id,
+            question="What's your favorite programming language?",
+            options=["Python 🐍", "JavaScript 💛", "Java ☕", "Go 🔵", "Rust 🦀"],
+            is_anonymous=True,
+            allows_multiple_answers=False
+        )
+        send_message(chat_id, "📊 Poll created! Vote above ⬆️")
+        return
+    
+    # /quiz - Create a quiz
+    if text.startswith("/quiz"):
+        logger.info("Quiz creation command received", user_id=chat_id, action="create_quiz")
+        
+        # Example quiz
+        send_poll(
+            chat_id=chat_id,
+            question="What is the capital of France?",
+            options=["London", "Berlin", "Paris", "Madrid"],
+            is_anonymous=True,
+            correct_option_id=2,  # Paris is at index 2
+            explanation="Paris is the capital and largest city of France! 🇫🇷"
+        )
+        send_message(chat_id, "🎯 Quiz created! Test your knowledge ⬆️")
+        return
+    
+    # /location - Send example location
+    if text.startswith("/location"):
+        logger.info("Location command received", user_id=chat_id, action="send_location")
+        
+        # Example: Eiffel Tower
+        send_location(
+            chat_id=chat_id,
+            latitude=48.8584,
+            longitude=2.2945
+        )
+        send_message(chat_id, "📍 Example location sent: Eiffel Tower, Paris")
+        return
+    
+    # /sticker - Send a sticker
+    if text.startswith("/sticker"):
+        logger.info("Sticker command received", user_id=chat_id, action="send_sticker")
+        
+        # Note: You need actual sticker file_ids from your bot
+        # This is a placeholder - replace with real sticker IDs
+        send_message(
+            chat_id, 
+            "🎨 To use stickers, you need to:\n"
+            "1. Send any sticker to the bot\n"
+            "2. The bot will save its file_id\n"
+            "3. Then you can reuse it!\n\n"
+            "Try sending me a sticker now! 👇"
+        )
+        return
+        
     # Natural conversation mode
     if not text.startswith("/"):
         logger.info("Natural conversation detected", user_id=chat_id, message_preview=text[:50], action="natural_chat")
@@ -1851,6 +2253,7 @@ def handle_text_message(chat_id: int, message_id: int, text: str, first_name: st
                 "Please use /help to see available commands."
             )
             return
+        
 
     # Fallback for unrecognized commands
     logger.warning("Unknown command", user_id=chat_id, command=text, action="unknown_command")
@@ -1954,6 +2357,14 @@ def lambda_handler(event, context):
                 handle_video(chat_id, message)
             elif message_type == "audio":
                 handle_audio(chat_id, message)
+            elif "sticker" in message:
+                handle_sticker(chat_id, message)
+            elif "poll" in message:
+                handle_poll(chat_id, message)
+            elif "location" in message:
+                handle_location(chat_id, message)
+            elif "venue" in message:
+                handle_venue(chat_id, message)
             elif text:
                 # Save ALL text messages to DynamoDB (except AI responses)
                 if message_id is not None and text.startswith("/"):
