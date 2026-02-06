@@ -29,7 +29,7 @@ A production-ready, serverless Telegram bot built on AWS infrastructure with Gro
 
 ---
 
-## 🎯 Overview
+## Overview🎯
 
 This project is a **serverless Telegram bot** that demonstrates:
 
@@ -51,7 +51,7 @@ This project is a **serverless Telegram bot** that demonstrates:
 
 ---
 
-## 🏗️ Architecture
+## Architecture🏗️
 
 ```
 ┌─────────────────┐
