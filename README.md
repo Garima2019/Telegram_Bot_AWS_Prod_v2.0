@@ -51,7 +51,7 @@ This project is a **serverless Telegram bot** that demonstrates:
 
 ---
 
-## Architecture🏗️
+## Architecture
 
 ```
 ┌─────────────────┐
@@ -97,7 +97,7 @@ This project is a **serverless Telegram bot** that demonstrates:
 
 ---
 
-## ✨ Features
+## Features✨
 
 ### 🤖 AI Conversation (Groq Integration)
 - Natural language conversations with AI
@@ -131,7 +131,7 @@ This project is a **serverless Telegram bot** that demonstrates:
 
 ---
 
-## 🌐 External API Integration
+## External API Integration🌐
 
 ### Groq AI API
 
@@ -192,7 +192,7 @@ except urllib.error.HTTPError as e:
 
 ---
 
-## 📦 Prerequisites
+## Prerequisites📦
 
 ### Required Tools
 - **Terraform** >= 1.0.0 ([Install](https://www.terraform.io/downloads))
@@ -211,7 +211,7 @@ except urllib.error.HTTPError as e:
 
 ---
 
-## 📁 Project Structure
+## Project Structure📁
 
 ```
 telegram-bot-aws/
@@ -231,7 +231,7 @@ telegram-bot-aws/
 
 ---
 
-## 🚀 Setup & Deployment
+## Setup & Deployment🚀
 
 ### Step 1: Clone Repository
 
@@ -344,7 +344,7 @@ Open Telegram and send `/start` to your bot!
 
 ---
 
-## ⚙️ Configuration
+## Configuration
 
 ### Environment Variables (Lambda)
 
@@ -371,7 +371,7 @@ See `terraform/variables.tf` for complete list of configurable options.
 
 ---
 
-## 💬 Bot Commands
+## Bot Commands💬
 
 ### 🔹 Basic Commands
 
@@ -445,7 +445,7 @@ See `terraform/variables.tf` for complete list of configurable options.
 
 ---
 
-## 📊 Monitoring & Operations
+## Monitoring & Operations📊
 
 ### CloudWatch Logs
 
@@ -514,7 +514,7 @@ Monitor in CloudWatch:
 
 ---
 
-## 🔒 Security
+## Security🔒
 
 ### IAM Policies (Least Privilege)
 
@@ -575,7 +575,7 @@ Monitor in CloudWatch:
 
 ---
 
-## 🏗️ Terraform Structure
+## Terraform Structure
 
 ### Modules
 
@@ -693,7 +693,7 @@ aws dynamodb create-table \
 
 ---
 
-## 🧪 Testing
+## Testing🧪
 
 ### Local Testing
 
@@ -779,7 +779,7 @@ pytest test_handler.py -v
 
 ---
 
-## 🔧 Troubleshooting
+## Troubleshooting🔧
 
 ### Common Issues
 
@@ -896,7 +896,7 @@ filter @type = "REPORT"
 
 ---
 
-## 💰 Cost Estimation
+## Cost Estimation💰
 
 ### Monthly Costs (Approximate)
 
@@ -932,7 +932,7 @@ filter @type = "REPORT"
 
 ---
 
-## 🚀 Future Enhancements
+## Future Enhancements🚀
 
 ### Short-term
 - [ ] Add support for inline keyboards
@@ -961,13 +961,22 @@ filter @type = "REPORT"
 ## 📸 Screenshots & Logs
 
 ### CloudWatch Alarm
-![CloudWatch Alarm](docs/cloudwatch-alarm.png)
+<a href="evidence/Alarm_Triggered1.png" target="_blank">
+  Alarm Triggered
+</a>
+*Error alarm triggered after detecting test error*
 
 ### CloudWatch Logs
-![CloudWatch Logs](docs/cloudwatch-logs.png)
+<a href="evidence/Structured_Logs.png" target="_blank">
+  Structured Logs
+</a>
+*CloudWatch log stream showing JSON-formatted logs with consistent fields*
 
-### Architecture Diagram
-![Architecture](docs/architecture.png)
+### CloudWatch Dashboard
+<a href="evidence/Dashboard.png" target="_blank">
+  Dashboard
+</a>
+*Complete observability dashboard with all metrics*
 
 ---
 
@@ -990,7 +999,7 @@ Contributions are welcome! Please follow these steps:
 
 ---
 
-## 📄 License
+## License📄
 
 This project was developed for an MSc Cloud Solutions course and implements a Telegram bot using AWS Lambda, DynamoDB for chat data storage, and Amazon S3.
 
