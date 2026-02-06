@@ -391,7 +391,6 @@ See `terraform/variables.tf` for complete list of configurable options.
 | Plain text | Natural conversation | `What's the weather like?` |
 | `/clearhistory` | Clear conversation memory | `/clearhistory` |
 | `/ask <question>` | Quick AI answer | `/ask What is AWS?` |
-| `/summarize` | AI summary of notes | `/summarize` |
 
 ### 💾 Storage Commands (DynamoDB)
 
@@ -430,6 +429,13 @@ See `terraform/variables.tf` for complete list of configurable options.
 | `/search <keyword>` | Search messages | `/search meeting` |
 | `/latest` | Show latest message | `/latest` |
 | `/history` | Show last 5 messages | `/history` |
+
+### 📱 Native Features
+| Command | Description | Example |
+|---------|-------------|---------|
+| `/poll` | Create a poll | `/poll What's your favorite language?` |
+| `/location` | Share current location | `/location` |
+| `/stickers` | Send sticker menu | `/stickers` |
 
 ### 📊 Analytics
 
