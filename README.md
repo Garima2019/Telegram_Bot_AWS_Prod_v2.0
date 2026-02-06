@@ -961,19 +961,19 @@ filter @type = "REPORT"
 ## 📸 Screenshots & Logs
 
 ### CloudWatch Alarm
-<a href="evidence/Alarm_Triggered1.png" target="_blank">
+<a href="screenshot/Alarm_Triggered1.png" target="_blank">
   Alarm Triggered
 </a>
 *Error alarm triggered after detecting test error*
 
 ### CloudWatch Logs
-<a href="evidence/Structured_Logs.png" target="_blank">
+<a href="screenshot/Structured_Logs.png" target="_blank">
   Structured Logs
 </a>
 *CloudWatch log stream showing JSON-formatted logs with consistent fields*
 
 ### CloudWatch Dashboard
-<a href="evidence/Dashboard.png" target="_blank">
+<a href="screenshot/Dashboard.png" target="_blank">
   Dashboard
 </a>
 *Complete observability dashboard with all metrics*
