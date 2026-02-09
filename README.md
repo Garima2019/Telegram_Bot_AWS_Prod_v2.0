@@ -23,7 +23,6 @@ A production-ready, serverless Telegram bot built on AWS infrastructure with Gro
 - [Terraform Structure](#terraform-structure)
 - [Testing](#testing)
 - [Troubleshooting](#troubleshooting)
-- [Cost Estimation](#cost-estimation)
 - [Future Enhancements](#future-enhancements)
 - [License](#license)
 
@@ -899,42 +898,6 @@ filter @type = "REPORT"
 | filter @duration > 3000
 | sort @duration desc
 ```
-
----
-
-## Cost Estimation💰
-
-### Monthly Costs (Approximate)
-
-**Assumptions:**
-- 10,000 messages/month
-- 1 GB stored in S3
-- DynamoDB on-demand billing
-- us-east-1 region
-
-| Service | Usage | Cost |
-|---------|-------|------|
-| Lambda | 10,000 invocations @ 512MB, 3s avg | $0.06 |
-| API Gateway | 10,000 requests | $0.04 |
-| DynamoDB | 10,000 reads, 10,000 writes | $2.50 |
-| S3 | 1 GB storage, 100 PUT, 1,000 GET | $0.03 |
-| CloudWatch Logs | 1 GB ingestion, 1 GB storage | $0.52 |
-| **Total** | | **~$3.15/month** |
-
-**Free Tier Benefits:**
-- Lambda: 1M requests/month free
-- DynamoDB: 25 GB storage free
-- S3: 5 GB storage free (first 12 months)
-- CloudWatch: 5 GB logs ingestion free
-
-**Production Scale (100K messages/month):**
-- Estimated cost: ~$25-30/month
-
-**Cost Optimization Tips:**
-- Use DynamoDB TTL for temporary data
-- Implement S3 lifecycle policies
-- Reduce Lambda memory if possible
-- Use CloudWatch Logs retention policies
 
 ---
 
